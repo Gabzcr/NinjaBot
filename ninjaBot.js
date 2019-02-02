@@ -17,6 +17,7 @@ client.on('message', msg => {
    if (chan !== null) {
      chan.overwritePermissions(msg.member, {
        SEND_MESSAGES : true,
+       READ_MESSAGES : true,
        VIEW_CHANNEL : true
      })
     .catch(console.error);
