@@ -1,0 +1,10 @@
+{
+  "name": "NinjaBot",
+  "version": "1.0.0",
+  "description": "Discord Bot for 'Quatrième Etage'",
+  "main": "testBot.js",
+  "author": "Gabrielle Pauvert",
+  "dependencies": {
+  "discord.js": "11.1.0"
+  }
+}
