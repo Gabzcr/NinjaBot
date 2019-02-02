@@ -1,12 +1,12 @@
 const Discord = require('discord.js');
-const bot = new Discord.Client();
+const client = new Discord.Client();
 var auth = require('./auth.json');
 
-bot.on('ready', () => {
- console.log(`Logged in as ${bot.user.tag}!`);
+client.on('ready', () => {
+ console.log(`Logged in as ${client.user.tag}!`);
  });
 
-bot.on('message', msg => {
+client.on('message', msg => {
  if (msg.content.includes(':Ninja:')) {
    msg.delete(5000).catch(console.error);
  }
@@ -30,13 +30,13 @@ bot.on('message', msg => {
  }
  });
 
-bot.on('messageUpdate', (msg, new_msg) => {
+client.on('messageUpdate', (msg, new_msg) => {
   if (new_msg.content.includes(':Ninja:')) {
     new_msg.delete(5000).catch(console.error);
   }
 })
 
-bot.on('messageReactionAdd', (reaction, user) => {
+client.on('messageReactionAdd', (reaction, user) => {
   if(reaction.emoji.name === "Ninja") {
     setTimeout(function()
     {
@@ -45,4 +45,4 @@ bot.on('messageReactionAdd', (reaction, user) => {
   }
 });
 
-bot.login(process.env.BOT_TOKEN)
+client.login(process.env.BOT_TOKEN)
