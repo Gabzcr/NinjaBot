@@ -1,6 +1,6 @@
 {
   "name": "NinjaBot",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "Discord Bot for 'Quatrième Etage'",
   "main": "ninjaBot.js",
   "author": "Gabrielle Pauvert",
@@ -8,6 +8,6 @@
     "start": "node ninjaBot.js"
   },
   "dependencies": {
-    "discord.js": "11.1.0"
+    "discord.js": "11.4.2"
   }
 }
