@@ -20,12 +20,24 @@ client.on('message', msg => {
        VIEW_CHANNEL : true
      })
     .catch(console.error);
-    msg.reply('vous avez désormais accès au channel ' + chan_text);
+    msg.reply('vous avez désormais accès au channel ' + chan_text)
+      .then(sent => {if (sent.channel.name === "liste-des-channels") {
+        sent.delete(3600*1000);
+      }})
+      .catch(console.error);
    }
    else {
-     msg.reply('je ne connais pas ce channel.');
+     msg.reply('je ne connais pas ce channel.')
+      .then(sent => {if (sent.channel.name === "liste-des-channels") {
+        sent.delete(3600*1000);
+     }})
+     .catch(console.error);;
    }
-
+   if (msg.channel.name === "liste-des-channels") {
+     if (msg.content.startsWith('!join')) {
+       msg.delete(3600*1000);
+     }
+   }
  }
  });
 
