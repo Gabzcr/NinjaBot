@@ -1,1 +1,1 @@
-worker: python3 ninjaBot.py
+worker: python ninjaBot.py
