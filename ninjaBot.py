@@ -67,4 +67,4 @@ async def on_reaction_add(reaction, user):
         await bot.remove_reaction(reaction.message, reaction.emoji, user)
 
 
-bot.run(os.getenv('BOT_TOKEN'))
+bot.run('NTQyMDI1MDQzNjY5MTU1ODc1.Dzn_zQ.vSm2ITIxP7Q1mcrWUxvhOuCKT60')
