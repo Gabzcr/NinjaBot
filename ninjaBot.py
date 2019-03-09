@@ -63,7 +63,7 @@ async def on_message_edit(before, after):
 
 @bot.listen()
 async def on_reaction_add(reaction, user):
-    if reaction.emoji.name == "Ninja":
+    if 'Ninja' in str(reaction.emoji):
         await asyncio.sleep(5)
         await bot.remove_reaction(reaction.message, reaction.emoji, user)
 
