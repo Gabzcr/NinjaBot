@@ -1,5 +1,6 @@
 import discord
 import asyncio
+import os
 from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description='your description')
 
