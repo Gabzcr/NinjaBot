@@ -2,7 +2,6 @@
 
 import discord
 import asyncio
-import time
 from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description='your description')
 
@@ -47,7 +46,7 @@ async def join(ctx):
         else:
             message = await bot.say("{0.author.mention}, je ne connais pas ce channel ".format(ctx.message) + chan_name)
         messages.append(message)
-    await asyncio.sleep(5)
+    await asyncio.sleep(5*60)
     for msg in messages:
         await bot.delete_message(msg)
     await bot.delete_message(ctx.message)
@@ -70,4 +69,4 @@ async def on_reaction_add(reaction, user):
         await bot.remove_reaction(reaction.message, reaction.emoji, user)
 
 
-bot.run('process.env.BOT_TOKEN')
+bot.run(os.getenv('BOT_TOKEN'))
