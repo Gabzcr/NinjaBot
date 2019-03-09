@@ -1,1 +1,1 @@
-worker: node ninjaBot.js
+worker: python3 ninjaBot.py
