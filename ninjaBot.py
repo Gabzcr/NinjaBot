@@ -56,6 +56,9 @@ async def join(ctx):
 
 async def roll_g(ctx, l):
     c = ctx.message.content[l+2:]
+    if c.lower() == "uranie puffin":
+        await bot.say("{0.author.mention}, je ne me permettrais pas de lancer Mlle Puffin !".format(ctx.message))
+        return()
     c2 = re.split("d|D", c)
     try:
         if len(c2) != 2:
