@@ -5,7 +5,10 @@ import random
 import re
 
 from discord.ext import commands
-bot = commands.Bot(command_prefix='!', description='your description')
+bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
++ "I can give you access to the channel of your choice. (join)\n"
++ "But I don't like those sneaky Ninjas, so I don't let them leave more than 5s on this server.\n"
++ "I can also roll dice for you. Just ask ! (roll)")
 
 def normalize_name(name):
     res = name.lower()
@@ -32,6 +35,7 @@ async def on_ready():
 
 @bot.command(pass_context=True)
 async def join(ctx):
+    """ Gives permission to access given channel. """
     queries = ctx.message.content.split("\n")
     messages = []
     for q in queries:
@@ -63,7 +67,10 @@ async def roll_g(ctx, l):
     try:
         if len(c2) != 2:
             raise(ValueError)
-        nb_of_dices = int(c2[0])
+        if c2[0] == '':
+            nb_of_dices = 1
+        else:
+            nb_of_dices = int(c2[0])
         value_of_dices = int(c2[1])
     except(ValueError):
         await bot.say("{0.author.mention}, je ne reconnais pas cette expression.".format(ctx.message))
@@ -92,12 +99,16 @@ async def roll_g(ctx, l):
         inter = inter + ")"
         await bot.say("{0.author.mention}, vous avez obtenu un ".format(ctx.message) + "**" + str(sum(results)) + "**" + " " + inter + ".")
 
-@bot.command(pass_context = True)
+@bot.command(pass_context = True,
+description = "This command allows the user to roll one or several dice, using the syntax:\n"
++ "!roll [number of dice][d|D][max value of the dice]")
 async def roll(ctx):
+    """ Draws one or more random numbers from 1 to a specified value. """
     await roll_g(ctx, 4)
 
 @bot.command(pass_context = True)
 async def r(ctx):
+    """ Alias for roll. """
     await roll_g(ctx, 1)
 
 
