@@ -1,5 +1,6 @@
-!roll 666 renvoie toujours 666
+!roll 666 renvoie toujours 666.
 !roll 42 renvoie "Vous avez obtenu la Réponse."
 !roll Dreyfus renvoie "La question ne sera pas posée."
 !roll Crocell renvoie une blague du répertoire collaboratif.
 !roll easter egg renvoie (ou !easter egg) "Il n'y a aucun easter egg ici :innocent:".
+!roll chemises noires renvoie "Je vais rajouter un peu de lessive.".
