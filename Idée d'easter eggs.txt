@@ -4,3 +4,4 @@
 !roll Crocell renvoie une blague du répertoire collaboratif.
 !roll easter egg renvoie (ou !easter egg) "Il n'y a aucun easter egg ici :innocent:".
 !roll chemises noires renvoie "Je vais rajouter un peu de lessive.".
+!r !r * renvoie "(i) La première règle de la récursion est (i).".
