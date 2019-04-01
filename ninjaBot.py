@@ -3,11 +3,12 @@ import asyncio
 import os
 import random
 import re
+from easter_eggs import *
 
 from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
 + "I can give you access to the channel of your choice. (join)\n"
-+ "But I don't like those sneaky Ninjas, so I don't let them leave more than 5s on this server.\n"
++ "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s on this server.\n"
 + "I can also roll dice for you. Just ask ! (roll)")
 
 def normalize_name(name):
@@ -20,12 +21,6 @@ def normalize_name(name):
     if res[-1] == "-":
         res = res[:-1]
     return(res)
-
-def find_channel(channels, name):
-    for chan in channels:
-        if normalize_name(chan.name) == name:
-            return(chan)
-    return(None)
 
 @bot.event
 async def on_ready():
@@ -42,8 +37,10 @@ async def join(ctx):
         if q[:6] != "!join ":
             continue
         chan_name = normalize_name(q[6:])
-        channel = find_channel(ctx.message.server.channels, chan_name)
+        channel = discord.utils.find(lambda c: normalize_name(c.name) == chan_name, ctx.message.server.channels)
         if channel:
+            print(channel.type)
+            print([c.name for c in ctx.message.server.channels])
             overwrite = channel.overwrites_for(ctx.message.author)
             overwrite.read_messages = True
             overwrite.send_messages = True
@@ -60,8 +57,9 @@ async def join(ctx):
 
 async def roll_g(ctx, l):
     c = ctx.message.content[l+2:]
-    if c.lower() == "uranie puffin":
-        await bot.say("{0.author.mention}, je ne me permettrais pas de lancer Mlle Puffin !".format(ctx.message))
+    special = easter_eggs(c)
+    if special:
+        await bot.say("{0.author.mention}, ".format(ctx.message) + special)
         return()
     c2 = re.split("d|D", c)
     try:
