@@ -3,7 +3,9 @@ import re
 
 def easter_eggs(content):
     res = None
-    if content.lower() == "easter egg":
+    if ":Ninja:" in content:
+        res = "Rejoins-moi, mon frère ! <:Ninja:541390402104852485>"
+    elif content.lower() == "easter egg":
         res = "il n'y a aucun d'easter egg ici :innocent:."
     elif content.lower() == "uranie puffin" or content.lower() == "uranie":
         res = "je ne me permettrais pas de lancer Mlle Puffin !"
