@@ -3,6 +3,7 @@ import asyncio
 import os
 import random
 import re
+import unicodedata
 from easter_eggs import *
 
 from discord.ext import commands
@@ -28,41 +29,45 @@ async def on_ready():
     print(bot.user.name)
 
 
-@bot.command(pass_context=True)
-async def join(ctx):
+async def join_g(msg):
     """ Gives permission to access given channel. """
-    queries = ctx.message.content.split("\n")
+    queries = msg.content.split("\n")
     messages = []
     for q in queries:
         if q[:6] != "!join ":
             continue
         chan_name = normalize_name(q[6:])
-        channel = discord.utils.find(lambda c: normalize_name(c.name) == chan_name, ctx.message.server.channels)
+        channel = discord.utils.find(lambda c: normalize_name(c.name) == chan_name, msg.guild.channels)
         if channel:
-            print(channel.type)
-            print([c.name for c in ctx.message.server.channels])
-            overwrite = channel.overwrites_for(ctx.message.author)
-            overwrite.read_messages = True
-            overwrite.send_messages = True
-            await bot.edit_channel_permissions(channel, ctx.message.author, overwrite)
-            message = await bot.say("{0.author.mention}, vous avez désormais accès au channel ".format(ctx.message) + channel.name)
+            if not(channel.category) or normalize_name(channel.category.name[:6]) != "murder":
+                message = await msg.channel.send("{0.author.mention}, ce channel n'est pas joignable ".format(msg) + channel.name)
+            else:
+                overwrite = channel.overwrites_for(msg.author)
+                overwrite.read_messages = True
+                overwrite.send_messages = True
+                await channel.set_permissions(msg.author, overwrite=overwrite)
+                message = await msg.channel.send("{0.author.mention}, vous avez désormais accès au channel ".format(msg) + channel.name)
         else:
-            message = await bot.say("{0.author.mention}, je ne connais pas ce channel ".format(ctx.message) + chan_name)
+            message = await msg.channel.send("{0.author.mention}, je ne reconnais pas ce channel ".format(msg) + chan_name)
         messages.append(message)
     await asyncio.sleep(5*60)
-    for msg in messages:
-        await bot.delete_message(msg)
-    await bot.delete_message(ctx.message)
+    for message in messages:
+        await message.delete()
+    await msg.delete()
+
+@bot.command(pass_context=True)
+async def join(ctx):
+    await join_g(ctx.message)
 
 
-async def roll_g(ctx, l):
-    c = ctx.message.content[l+2:]
+async def roll_g(msg, l):
+    c = msg.content[l+2:]
     special = easter_eggs(c)
     if special:
-        message = await bot.say("{0.author.mention} ".format(ctx.message) + special)
+        message = await msg.channel.send("{0.author.mention} ".format(msg) + special)
         await asyncio.sleep(15*60)
-        await bot.delete_message(message)
-        await bot.delete_message(ctx.message)
+        await message.delete()
+        await msg.delete()
         return()
     c2 = re.split("d|D", c)
     try:
@@ -74,59 +79,111 @@ async def roll_g(ctx, l):
             nb_of_dices = int(c2[0])
         value_of_dices = int(c2[1])
     except(ValueError):
-        await bot.say("{0.author.mention} je ne reconnais pas cette expression.".format(ctx.message))
+        await msg.channel.send("{0.author.mention} je ne reconnais pas cette expression.".format(msg))
         return()
     results = []
     if nb_of_dices <= 0:
-        await bot.say("{0.author.mention} vous devez lancer au moins un dé.".format(ctx.message))
+        await msg.channel.send("{0.author.mention} vous devez lancer au moins un dé.".format(msg))
         return()
     if nb_of_dices > 4242:
-        await bot.say("{0.author.mention} vous devez lancer moins de 4242 dés.".format(ctx.message))
+        await msg.channel.send("{0.author.mention} vous devez lancer moins de 4242 dés.".format(msg))
         return()
     if value_of_dices <= 0:
-        await bot.say("{0.author.mention} les dés doivent avoir une valeur au moins égale à 1.".format(ctx.message))
+        await msg.channel.send("{0.author.mention} les dés doivent avoir une valeur au moins égale à 1.".format(msg))
         return()
     if value_of_dices > 2**42:
-        await bot.say("{0.author.mention} les dés doivent avoir une valeur inférieure à 2 puissance 42.".format(ctx.message))
+        await msg.channel.send("{0.author.mention} les dés doivent avoir une valeur inférieure à 2 puissance 42.".format(msg))
         return()
     for dice in range(nb_of_dices):
         results.append(random.randint(1,value_of_dices))
     if nb_of_dices == 1 or nb_of_dices > 100:
-        await bot.say("{0.author.mention} vous avez obtenu un ".format(ctx.message) + "**" + str(sum(results)) + "**" + ".")
+        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + ".")
     else:
         inter = "(" + str(results[0])
         for value in results[1:]:
             inter = inter + " + " + str(value)
         inter = inter + ")"
-        await bot.say("{0.author.mention} vous avez obtenu un ".format(ctx.message) + "**" + str(sum(results)) + "**" + " " + inter + ".")
+        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + " " + inter + ".")
 
 @bot.command(pass_context = True,
 description = "This command allows the user to roll one or several dice, using the syntax:\n"
 + "!roll [number of dice][d|D][max value of the dice]")
 async def roll(ctx):
     """ Draws one or more random numbers from 1 to a specified value. """
-    await roll_g(ctx, 4)
+    await roll_g(ctx.message, 4)
 
 @bot.command(pass_context = True)
 async def r(ctx):
     """ Alias for roll. """
-    await roll_g(ctx, 1)
+    await roll_g(ctx.message, 1)
+
+async def poll_g(msg, length):
+    lines = msg.content.split("\n")
+    if len(lines) >= 2:
+        lines[0] = lines[0][length + 2:]
+        for l in lines:
+            start = re.match("([0-9]|[a-z]|[A-Z])( |\.|\-)", l)
+            if not(start):
+                continue
+            start = start.group(0)[:-1]
+            if len(start) != 1:
+                continue
+            if (48 <= ord(start) and ord(start) <= 57) or ():
+                await msg.add_reaction(start + "\N{COMBINING ENCLOSING KEYCAP}")
+            elif 65 <= ord(start) and ord(start) <= 90:
+                await msg.add_reaction(unicodedata.lookup("REGIONAL INDICATOR SYMBOL LETTER " + start))
+            elif 97 <= ord(start) and ord(start) <= 122:
+                start = chr(ord(start) - 32)
+                await msg.add_reaction(unicodedata.lookup("REGIONAL INDICATOR SYMBOL LETTER " + start))
+    for i in range(len(msg.content)):
+        s = msg.content[i]
+        if ord(s) > 160:
+            try:
+                await msg.add_reaction(s)
+            except:
+                if s == "\N{COMBINING ENCLOSING KEYCAP}":
+                    await msg.add_reaction(msg.content[i-1] + s)
+        elif s == "<":
+            em = re.match("<:(.*?):(.*?)>", msg.content[i:])
+            if em:
+                id = int(em.group(2))
+                await msg.add_reaction(bot.get_emoji(id))
+
+@bot.command(pass_context=True)
+async def poll(ctx):
+    """ Automatically fills a poll message with appropriate emoji reactions. """
+    await poll_g(ctx.message, 4)
+
+@bot.command(pass_context=True)
+async def sondage(ctx):
+    """ (French alias for poll) Réagis automatatiquement à un message de sondage avec les emojis appropriées. """
+    await poll_g(ctx.message, 7)
 
 
 @bot.listen()
 async def on_message(msg):
     if ':Ninja:' in msg.content:
         await asyncio.sleep(5)
-        await bot.delete_message(msg)
+        await msg.delete()
 
 @bot.listen()
 async def on_message_edit(before, after):
     await on_message(after)
+    if after.content[:5] == "!poll":
+        await poll_g(after, 4)
+    elif after.content[:8] == "!sondage":
+        await poll_g(after, 7)
+    elif after.content[:5] == "!join":
+        await join_g(after)
+    elif after.content[:5] == "!roll":
+        await roll_g(after, 4)
+    elif after.content[:2] == "!r":
+        await roll_g(after, 1)
 
 @bot.listen()
 async def on_reaction_add(reaction, user):
     if 'Ninja' in str(reaction.emoji):
         await asyncio.sleep(5)
-        await bot.remove_reaction(reaction.message, reaction.emoji, user)
+        await reaction.message.remove_reaction(reaction.emoji, user)
 
 bot.run(os.getenv('BOT_TOKEN'))
