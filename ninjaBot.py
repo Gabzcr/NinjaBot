@@ -10,7 +10,8 @@ from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
 + "I can give you access to the channel of your choice. (join)\n"
 + "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s on this server.\n"
-+ "I can also roll dice for you. Just ask ! (roll)")
++ "I can roll dice for you. Just ask ! (roll)")
++ "I can also prepare a poll message for you by reacting with appropriate emojis so that no one has to find them in the list. (poll)"
 
 def normalize_name(name):
     res = name.lower()
@@ -30,7 +31,6 @@ async def on_ready():
 
 
 async def join_g(msg):
-    """ Gives permission to access given channel. """
     queries = msg.content.split("\n")
     messages = []
     for q in queries:
@@ -57,6 +57,7 @@ async def join_g(msg):
 
 @bot.command(pass_context=True)
 async def join(ctx):
+    """ Gives permission to access given channel. """
     await join_g(ctx.message)
 
 
@@ -156,7 +157,8 @@ async def poll(ctx):
 
 @bot.command(pass_context=True)
 async def sondage(ctx):
-    """ (French alias for poll) Réagis automatatiquement à un message de sondage avec les emojis appropriées. """
+    """ (French alias for poll)
+    Réagis automatiquement à un message de sondage avec les emojis appropriées. """
     await poll_g(ctx.message, 7)
 
 
