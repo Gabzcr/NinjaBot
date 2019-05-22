@@ -9,7 +9,7 @@ from easter_eggs import *
 from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
 + "I can give you access to the channel of your choice. (join)\n"
-+ "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s on this server.\n"
++ "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s or 10s on this server.\n"
 + "I can roll dice for you. Just ask ! (roll)"
 + "I can also prepare a poll message for you by reacting with appropriate emojis so that no one has to find them in the list. (poll)")
 
@@ -33,7 +33,7 @@ def normalize_name(name):
     return(res)
 
 async def join_g(msg):
-    """ 
+    """
     General function for join commands.
     For each line of the message msg corresponding to a join command (!join [channel_name], the bot looks for the corresponding channel
     and overwrites the permissions of the user who sent this message to grant him the rights to read and send messages in this channel.
@@ -90,7 +90,7 @@ async def roll_g(msg, l):
         await message.delete()
         await msg.delete()
         return()
-    
+
     #parsing the dice rolling command
     c2 = re.split("d|D", c)
     try:
@@ -105,7 +105,7 @@ async def roll_g(msg, l):
         await msg.channel.send("{0.author.mention} je ne reconnais pas cette expression.".format(msg))
         return()
     results = []
-    
+
     #checking for degenerate cases (invalid dice rolling command)
     if nb_of_dices <= 0:
         await msg.channel.send("{0.author.mention} vous devez lancer au moins un dé.".format(msg))
@@ -119,11 +119,11 @@ async def roll_g(msg, l):
     if value_of_dices > 2**42:
         await msg.channel.send("{0.author.mention} les dés doivent avoir une valeur inférieure à 2 puissance 42.".format(msg))
         return()
-    
+
     #generating random numbers for the dice results
     for dice in range(nb_of_dices):
         results.append(random.randint(1,value_of_dices))
-    
+
     #answering (according to number of dice)
     if nb_of_dices == 1 or nb_of_dices > 100:
         await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + ".")
@@ -202,14 +202,18 @@ async def sondage(ctx):
 
 @bot.listen()
 async def on_message(msg):
-    """ Detect and automatically erase Ninja emojis in messages (after 5s). """
+    """ Detect and automatically erase Ninja emojis in messages (after 10s).
+    Detect Michel's messages from Le Grand Méchant Renard and react with Michel. """
+    react = re.search("(B|b)onjour (M|m)ada(a)+me", msg.content)
+    if react:
+        await msg.add_reaction("🐥")
     if ':Ninja:' in msg.content:
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
         await msg.delete()
 
 @bot.listen()
 async def on_message_edit(before, after):
-    """ Applies appropriate function to edited message (Ninja erasing or command function)."""
+    """ Applies appropriate function to edited message (new message analysis)."""
     await on_message(after)
     if after.content[:5] == "!poll":
         await poll_g(after, 4)
