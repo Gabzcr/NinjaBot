@@ -24,7 +24,8 @@ La légende raconte que cette commande serait truffée d'easter eggs...
 ```![poll ou sondage] [message contenant les emojis à reporter en réaction]
 (ou sur des lignes séparées après la commande:)
 [1-9 ou A-Z ou a-Z][. ou - ou ␣][Proposition]
-...```
+...
+```
 Exemple : `!poll Choisissez une réponse:
 1. La réponse 1.
 B- La réponse B.
