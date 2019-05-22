@@ -24,7 +24,8 @@ Le bot efface tous les messages contenant une commande `join` ou une réponse à
 ```
 ![r ou roll] [nb de dés (par défaut : 1)][d ou D][valeur des dés]
 ```
-Exemple: `!roll d6` ou `!r 2d20`
+Exemple: `!roll d6` ou `!r 2d20`.
+
 La légende raconte que cette commande serait truffée d'easter eggs...
 
 **- Commande poll (ou sondage):** permet de créer un sondage d'opinion par réactions à un message de sondage.
