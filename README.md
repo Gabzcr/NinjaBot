@@ -5,7 +5,9 @@ This is a discord bot for the needs of the "Quatrième Etage", a group of French
 # Fonctionnement du bot
 
 **- Commande join :** permet de rejoindre un channel.
-```!join [nom de la murder]```
+```
+!join [nom de la murder]
+```
 Exemple : `!join professeur layton et l'île de soay`.
 
 Le bot reconnaît les channels même si les accents ne sont pas les bons (ex : `!join hotel du grand nord` ou `!join joyeux nôêl` sont des noms de channel valides).
@@ -16,12 +18,15 @@ Le bot peut répondre à plusieurs demandes en une seule fois, dans un même mes
 Le bot efface tous les messages contenant une commande `join` ou une réponse à une commande `join` au bout de cinq minutes.
 
 **- Commande roll :** permet de lancer un ou plusieurs dés.
-```![r ou roll] [nb de dés (par défaut : 1)][d ou D][valeur des dés]```
+```
+![r ou roll] [nb de dés (par défaut : 1)][d ou D][valeur des dés]
+```
 Exemple: `!roll d6` ou `!r 2d20`
 La légende raconte que cette commande serait truffée d'easter eggs...
 
 **- Commande poll (ou sondage):** permet de créer un sondage d'opinion par réactions à un message de sondage.
-```![poll ou sondage] [message contenant les emojis à reporter en réaction]
+```
+![poll ou sondage] [message contenant les emojis à reporter en réaction]
 (ou sur des lignes séparées après la commande:)
 [1-9 ou A-Z ou a-Z][. ou - ou ␣][Proposition]
 ...
