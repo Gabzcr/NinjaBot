@@ -32,10 +32,11 @@ def normalize_name(name):
         res = res[:-1]
     return(res)
 
+
 async def join_g(msg):
     """
     General function for join commands.
-    For each line of the message msg corresponding to a join command (!join [channel_name], the bot looks for the corresponding channel
+    For each line of the message msg corresponding to a join command (!join [channel_name]), the bot looks for the corresponding channel
     and overwrites the permissions of the user who sent this message to grant him the rights to read and send messages in this channel.
     The bot answers to the user when finished, with the result of the command.
     """
@@ -69,8 +70,41 @@ async def join_g(msg):
 
 @bot.command(pass_context=True)
 async def join(ctx):
-    """ Gives permission to access given channel. """
+    """ Gives permission to access asked channel. """
     await join_g(ctx.message)
+
+
+async def leave_g(msg):
+    """
+    General function for leave commands.
+    For each line of the message msg corresponding to a leave command (!leave [channel_name]),
+    the bot looks for the corresponding channel and suppress all permission overwrites for the user who sent this message.
+    The bot answers to the user when finished, with the result of the command.
+    """
+    queries = msg.content.split("\n")
+    messages = []
+    for q in queries:
+        if q[:7] != "!leave ":
+            continue
+        #find corresponding channel
+        chan_name = normalize_name(q[7:])
+        channel = discord.utils.find(lambda c: normalize_name(c.name) == chan_name, msg.guild.channels)
+        if channel:
+            await channel.set_permissions(msg.author, overwrite=None)
+            message = await msg.channel.send("{0.author.mention}, vous n'avez plus accès spécifiquement au channel ".format(msg) + channel.name)
+        else:
+            message = await msg.channel.send("{0.author.mention}, je ne reconnais pas ce channel ".format(msg) + chan_name)
+        messages.append(message)
+    #clean every command message and automated answer after five minutes
+    await asyncio.sleep(5*60)
+    for message in messages:
+        await message.delete()
+    await msg.delete()
+
+@bot.command(pass_context=True)
+async def leave(ctx):
+    """Suppress permission overwrites for asked channel (cancels a join command)."""
+    await leave_g(ctx.message)
 
 
 async def roll_g(msg, l):
@@ -134,7 +168,6 @@ async def roll_g(msg, l):
         inter = inter + ")"
         await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + " " + inter + ".")
 
-
 @bot.command(pass_context = True,
 description = "This command allows the user to roll one or several dice, using the syntax:\n"
 + "!roll [number of dice][d|D][max value of the dice]")
@@ -146,6 +179,7 @@ async def roll(ctx):
 async def r(ctx):
     """ Alias for roll. """
     await roll_g(ctx.message, 1)
+
 
 async def poll_g(msg, length):
     """
@@ -211,6 +245,7 @@ async def on_message(msg):
         await asyncio.sleep(10)
         await msg.delete()
 
+
 @bot.listen()
 async def on_message_edit(before, after):
     """ Applies appropriate function to edited message (new message analysis)."""
@@ -221,10 +256,13 @@ async def on_message_edit(before, after):
         await poll_g(after, 7)
     elif after.content[:5] == "!join":
         await join_g(after)
+    elif after.content[:6] == "!leave":
+        await leave_g(after)
     elif after.content[:5] == "!roll":
         await roll_g(after, 4)
     elif after.content[:2] == "!r":
         await roll_g(after, 1)
+
 
 @bot.listen()
 async def on_reaction_add(reaction, user):
@@ -232,5 +270,6 @@ async def on_reaction_add(reaction, user):
     if 'Ninja' in str(reaction.emoji):
         await asyncio.sleep(5)
         await reaction.message.remove_reaction(reaction.emoji, user)
+
 
 bot.run(os.getenv('BOT_TOKEN'))
