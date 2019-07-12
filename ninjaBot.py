@@ -10,7 +10,7 @@ from discord.ext import commands
 bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
 + "I can give you access to the channel of your choice. (join)\n"
 + "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s or 10s on this server.\n"
-+ "I can roll dice for you. Just ask ! (roll)"
++ "I can roll dice for you. Just ask ! (roll)\n"
 + "I can also prepare a poll message for you by reacting with appropriate emojis so that no one has to find them in the list. (poll)")
 
 @bot.event
