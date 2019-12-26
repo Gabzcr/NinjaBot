@@ -271,5 +271,22 @@ async def on_reaction_add(reaction, user):
         await asyncio.sleep(5)
         await reaction.message.remove_reaction(reaction.emoji, user)
 
+import datetime
+
+async def alarm_message():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        for g in bot.guilds:
+            print(normalize_name(g.name))
+        guild = discord.utils.find(lambda c: normalize_name(c.name) == "test", bot.guilds)
+        channel = discord.utils.find(lambda c: normalize_name(c.name) == "general", guild.channels)
+        t = datetime.datetime.now()
+        print(t)
+        if t.month == 12 and t.day == 26 and t.hour == 17:
+            messages = "Nous sommes le 26 décembre, et il est 17h{}".format(t.minute)
+            await channel.send(messages)
+            await asyncio.sleep(30)
+
+bot.loop.create_task(alarm_message())
 
 bot.run(os.getenv('BOT_TOKEN'))
