@@ -4,6 +4,7 @@ import os
 import random
 import re
 import unicodedata
+import datetime
 from easter_eggs import *
 
 from discord.ext import commands
@@ -112,7 +113,7 @@ async def roll_g(msg, l):
     General function for roll commands.
     The bot checks if the given command corresponds to an easter egg via easter_eggs function from easter_eggs.py and reacts accordingly.
     If no easter egg found, it analyzes the dice rolling command. It generates random numbers according to asked number of dice and
-    value of the dice, and sum them.
+    value of the dice, and sum them.NTQyMDI1MDQzNjY5MTU1ODc1.Dzn_zQ.vSm2ITIxP7Q1mcrWUxvhOuCKT60
     The bot answers to the user with the obtained total and the detailed results of each dice (if not too many dice).
     """
     c = msg.content[l+2:]
@@ -271,21 +272,29 @@ async def on_reaction_add(reaction, user):
         await asyncio.sleep(5)
         await reaction.message.remove_reaction(reaction.emoji, user)
 
-import datetime
 
 async def alarm_message():
     await bot.wait_until_ready()
     while not bot.is_closed():
-        for g in bot.guilds:
-            print(normalize_name(g.name))
-        guild = discord.utils.find(lambda c: normalize_name(c.name) == "test", bot.guilds)
-        channel = discord.utils.find(lambda c: normalize_name(c.name) == "general", guild.channels)
         t = datetime.datetime.now()
-        print(t)
-        if t.month == 12 and t.day == 26 and t.hour == 17:
-            messages = "Nous sommes le 26 décembre, et il est 17h{}".format(t.minute)
+        if t.month == 12 and t.day == 31 and t.hour == 23 and t.minute == 0:
+            guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
+            channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
+            role = guild.default_role
+            role.mentionable = True
+            messages = "🐥 @everyone Bonne année ! 🐥"
             await channel.send(messages)
-            await asyncio.sleep(30)
+            await asyncio.sleep(61)
+        elif t.month == 12 and t.day == 26 and t.hour == 18 and t.minute == 20:
+            guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
+            channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
+            role = guild.default_role
+            role.mentionable = True
+            messages = "Test : Il est 19h20."
+            await channel.send(messages)
+            await asyncio.sleep(61)
+        else:
+            await asyncio.sleep(5)
 
 bot.loop.create_task(alarm_message())
 
