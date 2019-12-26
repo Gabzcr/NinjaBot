@@ -285,14 +285,6 @@ async def loop_function():
             msg = "🐥 @everyone Bonne année ! 🐥"
             await channel.send(msg)
             await asyncio.sleep(61)
-        elif t.month == 12 and t.day == 26 and t.hour == 18 and t.minute == 30:
-            guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
-            channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
-            role = guild.default_role
-            role.mentionable = True
-            msg = "Test : Il est 19h30."
-            await channel.send(msg)
-            await asyncio.sleep(61)
         else:
             await asyncio.sleep(5)
 
