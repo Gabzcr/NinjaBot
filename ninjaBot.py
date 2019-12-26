@@ -273,7 +273,7 @@ async def on_reaction_add(reaction, user):
         await reaction.message.remove_reaction(reaction.emoji, user)
 
 
-async def alarm_message():
+async def loop_function():
     await bot.wait_until_ready()
     while not bot.is_closed():
         t = datetime.datetime.now()
@@ -282,20 +282,20 @@ async def alarm_message():
             channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
             role = guild.default_role
             role.mentionable = True
-            messages = "🐥 @everyone Bonne année ! 🐥"
-            await channel.send(messages)
+            msg = "🐥 @everyone Bonne année ! 🐥"
+            await channel.send(msg)
             await asyncio.sleep(61)
-        elif t.month == 12 and t.day == 26 and t.hour == 18 and t.minute == 20:
+        elif t.month == 12 and t.day == 26 and t.hour == 18 and t.minute == 30:
             guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
             channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
             role = guild.default_role
             role.mentionable = True
-            messages = "Test : Il est 19h20."
-            await channel.send(messages)
+            msg = "Test : Il est 19h30."
+            await channel.send(msg)
             await asyncio.sleep(61)
         else:
             await asyncio.sleep(5)
 
-bot.loop.create_task(alarm_message())
+bot.loop.create_task(loop_function())
 
 bot.run(os.getenv('BOT_TOKEN'))
