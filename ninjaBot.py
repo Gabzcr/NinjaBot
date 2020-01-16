@@ -242,7 +242,10 @@ async def on_message(msg):
     react = re.search("(B|b)onjour (M|m)ada(a)+me", msg.content)
     if react:
         await msg.add_reaction("🐥")
-    if ':Ninja:' in msg.content:
+    if bot.user.mentioned_in(msg):
+        ninja_emote = discord.utils.find(lambda e: e.name == "Ninja", msg.guild.emojis)
+        await msg.channel.send(ninja_emote)
+    if ':Ninja:' in msg.content and msg.author != bot.user:
         await asyncio.sleep(10)
         await msg.delete()
 
