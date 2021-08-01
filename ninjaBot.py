@@ -19,6 +19,10 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
 
+check_dict = {}
+#check_on = True
+#person_to_contact = bot.user
+
 
 def normalize_name(name):
     """ Transform the string name according to a norm ignoring punctuation and accents.
@@ -235,6 +239,55 @@ async def sondage(ctx):
     await poll_g(ctx.message, 7)
 
 
+
+
+@bot.command(pass_context=True)
+async def check(ctx):
+    """ Regularly checks on player emotional state and gives a feedback to the GM """
+    global check_dict
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    key = guild.id, chan.id
+    check_dict[key] = msg.author #personne à contacter
+    interval = re.search("[0-9]+m", msg.content)
+    duration = re.search("[0-9]+h", msg.content)
+    if not(interval):
+        await msg.channel.send("{0.author.mention}, précisez la durée entre deux checks svp (en minutes, par ex \"10m\").".format(msg))
+    else:
+        interval = interval.group(0)
+        interval = int(interval[:-1])
+        if duration:
+            duration = duration.group(0)
+            duration = int(duration[:-1])
+            nb_check = (duration*60)//interval
+            for i in range(nb_check):
+                if key not in check_dict:
+                    break
+                message = await msg.channel.send(":ok_hand: :grey_question:")
+                await message.add_reaction("👍")
+                await message.add_reaction("🤏")
+                await message.add_reaction("👎")
+                await asyncio.sleep(interval*1) #pour l'instant en seconde, plus tard en minutes
+        else:
+            while key in check_dict:
+                message = await msg.channel.send(":ok_hand: :grey_question:")
+                await message.add_reaction("👍")
+                await message.add_reaction("🤏")
+                await message.add_reaction("👎")
+                await asyncio.sleep(interval*1)
+
+@bot.command(pass_context=True)
+async def stop(ctx):
+    global check_dict
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    key = guild.id, chan.id
+    del check_dict[key]
+
+
+
 @bot.listen()
 async def on_message(msg):
     """ Detect and automatically erase Ninja emojis in messages (after 10s).
@@ -270,10 +323,24 @@ async def on_message_edit(before, after):
 
 @bot.listen()
 async def on_reaction_add(reaction, user):
-    """ Detect and automatically erase Ninja emojis in reactions (after 5s)."""
-    if 'Ninja' in str(reaction.emoji):
+    """ Detect and automatically erase Ninja emojis in reactions (after 5s).
+    Detects emotional status reactions to the checks. """
+    global check_dict
+    if 'Ninja' in str(reaction.emoji) or 'ninja' in str(reaction.emoji):
         await asyncio.sleep(5)
         await reaction.message.remove_reaction(reaction.emoji, user)
+    elif (str(reaction.emoji) == "👎" or str(reaction.emoji) == "🤏")\
+    and reaction.message.author == bot.user\
+    and reaction.message.content == ":ok_hand: :grey_question:"\
+    and user != bot.user: #sent by bot and contains ok_hand :question:
+        msg = reaction.message
+        guild = msg.guild
+        chan = msg.channel
+        key = guild.id, chan.id
+        if key in check_dict:
+            to_contact = check_dict[key]
+            await to_contact.send("Il y a un problème avec {0}.".format(user))
+
 
 
 async def loop_function():
