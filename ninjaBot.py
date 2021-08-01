@@ -268,14 +268,14 @@ async def check(ctx):
                 await message.add_reaction("👍")
                 await message.add_reaction("🤏")
                 await message.add_reaction("👎")
-                await asyncio.sleep(interval*1) #pour l'instant en seconde, plus tard en minutes
+                await asyncio.sleep(interval*60) #pour l'instant en seconde, plus tard en minutes
         else:
             while key in check_dict:
                 message = await msg.channel.send(":ok_hand: :grey_question:")
                 await message.add_reaction("👍")
                 await message.add_reaction("🤏")
                 await message.add_reaction("👎")
-                await asyncio.sleep(interval*1)
+                await asyncio.sleep(interval*60)
 
 @bot.command(pass_context=True)
 async def stop(ctx):
