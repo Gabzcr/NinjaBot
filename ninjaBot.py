@@ -263,11 +263,7 @@ async def check(ctx):
     key = guild.id, chan.id
     check_dict[key] = msg.author #personne à contacter
     interval = re.search("[0-9]+m", msg.content)
-    if interval:
-        leftover = msg.content[:interval.start()] + msg.content[interval.end():]
     duration = re.search("[0-9]+h", msg.content)
-    if duration:
-        leftover = msg.content[:interval.start()] + msg.content[interval.end():]
     role_list = msg.role_mentions
     if len(role_list) > 1 :
         await msg.channel.send("{0.author.mention}, veuillez préciser un unique rôle à suivre (au plus).".format(msg))
