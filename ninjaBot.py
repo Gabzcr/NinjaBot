@@ -282,7 +282,7 @@ async def check(ctx):
             #it is limited to 100 checks
         message = await msg.channel.send("{0.author.mention}, c'est noté ! Le premier ok-check aura lieu dans {1}m".format(msg,interval))
         await asyncio.sleep(interval*60)
-        for i in range(nb_check-1):
+        for i in range(nb_check):
             if key not in check_dict:
                 break
             message = await msg.channel.send(":ok_hand: :grey_question:")
