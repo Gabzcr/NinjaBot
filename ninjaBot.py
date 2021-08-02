@@ -19,10 +19,12 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
 
-check_dict = {}
-#check_on = True
-#person_to_contact = bot.user
+check_dict = {} #global variable for managing emotional security checks
 
+
+################################################################################
+# Channel access management #
+################################################################################
 
 def normalize_name(name):
     """ Transform the string name according to a norm ignoring punctuation and accents.
@@ -112,6 +114,10 @@ async def leave(ctx):
     await leave_g(ctx.message)
 
 
+################################################################################
+# Dice roll and easter eggs #
+################################################################################
+
 async def roll_g(msg, l):
     """
     General function for roll commands.
@@ -186,9 +192,13 @@ async def r(ctx):
     await roll_g(ctx.message, 1)
 
 
+################################################################################
+# Poll making #
+################################################################################
+
 async def poll_g(msg, length):
     """
-    General message for poll commands.
+    General function for poll commands.
     The bot superficially analyzes the structure of the message to detect the offering of options to the user of the form
     1. or A- etc.
     It then parses the message to detect the emoji contained.
@@ -239,7 +249,9 @@ async def sondage(ctx):
     await poll_g(ctx.message, 7)
 
 
-
+################################################################################
+# Emotional security checking #
+################################################################################
 
 @bot.command(pass_context=True)
 async def check(ctx):
@@ -251,31 +263,57 @@ async def check(ctx):
     key = guild.id, chan.id
     check_dict[key] = msg.author #personne à contacter
     interval = re.search("[0-9]+m", msg.content)
+    if interval:
+        leftover = msg.content[:interval.start()] + msg.content[interval.end():]
     duration = re.search("[0-9]+h", msg.content)
+    if duration:
+        leftover = msg.content[:interval.start()] + msg.content[interval.end():]
+    role_list = msg.role_mentions
+    if len(role_list) > 1 :
+        await msg.channel.send("{0.author.mention}, veuillez préciser un unique rôle à suivre (au plus).".format(msg))
     if not(interval):
-        await msg.channel.send("{0.author.mention}, précisez la durée entre deux checks svp (en minutes, par ex \"10m\").".format(msg))
+        await msg.channel.send("{0.author.mention}, précisez la durée entre deux checks (en minutes, par ex \"10m\").".format(msg))
     else:
         interval = interval.group(0)
-        interval = int(interval[:-1])
+        interval = int(interval[:-1])#en minutes !
+        answer_time_limit = min(interval*60*0.15, 2*60)#en secondes
         if duration:
             duration = duration.group(0)
             duration = int(duration[:-1])
             nb_check = (duration*60)//interval
-            for i in range(nb_check):
-                if key not in check_dict:
-                    break
-                message = await msg.channel.send(":ok_hand: :grey_question:")
-                await message.add_reaction("👍")
-                await message.add_reaction("🤏")
-                await message.add_reaction("👎")
-                await asyncio.sleep(interval*60) #pour l'instant en seconde, plus tard en minutes
         else:
-            while key in check_dict:
-                message = await msg.channel.send(":ok_hand: :grey_question:")
-                await message.add_reaction("👍")
-                await message.add_reaction("🤏")
-                await message.add_reaction("👎")
-                await asyncio.sleep(interval*60)
+            nb_check = 100 #this way, the bot will not keep going forever if someone forgets to stop the checks
+            #it is limited to 100 checks
+        message = await msg.channel.send("{0.author.mention}, c'est noté ! Le premier ok-check aura lieu dans {1}m".format(msg,interval))
+        await asyncio.sleep(interval*60)
+        for i in range(nb_check-1):
+            if key not in check_dict:
+                break
+            message = await msg.channel.send(":ok_hand: :grey_question:")
+            await message.add_reaction("👍")
+            await message.add_reaction("🤏")
+            await message.add_reaction("👎")
+            if role_list == []:
+                await asyncio.sleep(interval*60) #pour l'instant en secondes, plus tard en minutes
+            else:
+                role = role_list[0]
+                liste_joueurs = role.members
+                await asyncio.sleep(answer_time_limit)
+                message_updated = await message.channel.fetch_message(message.id)
+                liste_reaction = message_updated.reactions
+                for joueur in liste_joueurs:
+                    found = False #teste si le joueur a réagi au message du bot
+                    for reac in liste_reaction:
+                        if found:
+                            break
+                        async for u in reac.users():
+                            if u.id == joueur.id:
+                                found = True
+                                break
+                    if not found and str(joueur.status) != "offline":
+                        await msg.author.send("{0} n'a toujours pas répondu au check après {1}m.".format(joueur, answer_time_limit/60))
+                await asyncio.sleep(interval*60 - answer_time_limit)
+
 
 @bot.command(pass_context=True)
 async def stop(ctx):
@@ -284,14 +322,19 @@ async def stop(ctx):
     guild = msg.guild
     chan = msg.channel
     key = guild.id, chan.id
-    del check_dict[key]
+    if key in check_dict:
+        del check_dict[key]
 
 
+
+################################################################################
+# Divers #
+################################################################################
 
 @bot.listen()
 async def on_message(msg):
-    """ Detect and automatically erase Ninja emojis in messages (after 10s).
-    Detect Michel's messages from Le Grand Méchant Renard and react with Michel. """
+    """ Detects and automatically erases Ninja emojis in messages (after 10s).
+    Detects Michel's messages from Le Grand Méchant Renard and react with Michel. """
     react = re.search("(B|b)onjour (M|m)ada(a)+me", msg.content)
     if react:
         await msg.add_reaction("🐥")
@@ -339,9 +382,12 @@ async def on_reaction_add(reaction, user):
         key = guild.id, chan.id
         if key in check_dict:
             to_contact = check_dict[key]
-            await to_contact.send("Il y a un problème avec {0}.".format(user))
+            await to_contact.send("Attention, {0} a répondu avec {1}.".format(user, str(reaction.emoji)))
 
 
+################################################################################
+# Bot loop function (and happy new year feature) #
+################################################################################
 
 async def loop_function():
     await bot.wait_until_ready()
