@@ -123,7 +123,7 @@ async def roll_g(msg, l):
     General function for roll commands.
     The bot checks if the given command corresponds to an easter egg via easter_eggs function from easter_eggs.py and reacts accordingly.
     If no easter egg found, it analyzes the dice rolling command. It generates random numbers according to asked number of dice and
-    value of the dice, and sum them.NTQyMDI1MDQzNjY5MTU1ODc1.Dzn_zQ.vSm2ITIxP7Q1mcrWUxvhOuCKT60
+    value of the dice, and sum them.
     The bot answers to the user with the obtained total and the detailed results of each dice (if not too many dice).
     """
     c = msg.content[l+2:]
@@ -137,6 +137,10 @@ async def roll_g(msg, l):
         return()
 
     #parsing the dice rolling command
+    c = c.lower()
+    select_dice = re.search("max|min", c)
+    if select_dice:
+        c = c[:select_dice.start()] + c[select_dice.end():]
     c2 = re.split("d|D", c)
     try:
         if len(c2) != 2:
@@ -188,13 +192,32 @@ async def roll_g(msg, l):
             "** {0} ** ({1} {2} {3}).".format(total, sum(results), operation.group(2), abs(add_value), )
             await msg.channel.send(to_say)
     else:
+        """
+        if select_dice:
+            inter = "(" + str(results[0])
+            for value in results[1:]:
+                inter = inter + ", " + str(value)
+            inter = inter + ")"
+            if select_dice.group(2) == "min":
+                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(min(results)) + "** " + inter + ".")
+            else:#=="max"
+                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(max(results)) + "** " + inter + ".")
+
+        else:"""
+        concat = " , " if select_dice else " + "
         inter = "(" + str(results[0])
         for value in results[1:]:
-            inter = inter + " + " + str(value)
+            inter = inter + concat + str(value)
         if operation:
-            inter += " {0} ".format(operation.group(2)) + str(abs(add_value))
+            inter += " avec un bonus aux dés de " + str(add_value)
         inter = inter + ")"
-        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)+add_value) + "**" + " " + inter + ".")
+        if select_dice:
+            if select_dice.group(0) == "min":
+                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(min(results) + add_value) + "** " + inter + ".")
+            else: #=="max"
+                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(max(results) + add_value) + "** " + inter + ".")
+        else:
+            await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)+add_value*len(results)) + "** " + inter + ".")
 
 @bot.command(pass_context = True,
 description = "This command allows the user to roll one or several dice, using the syntax:\n"
