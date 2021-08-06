@@ -145,7 +145,16 @@ async def roll_g(msg, l):
             nb_of_dices = 1
         else:
             nb_of_dices = int(c2[0])
-        value_of_dices = int(c2[1])
+        add_value = 0
+        operation = re.match("(.*)([+-])(.*)", c2[1])
+        if operation:
+            value_of_dices = int(operation.group(1))
+            factor = 1
+            if operation.group(2) == "-":
+                factor = -1
+            add_value = factor*int(operation.group(3))
+        else:
+            value_of_dices = int(c2[1])
     except(ValueError):
         await msg.channel.send("{0.author.mention} je ne reconnais pas cette expression.".format(msg))
         return()
@@ -171,13 +180,21 @@ async def roll_g(msg, l):
 
     #answering (according to number of dice)
     if nb_of_dices == 1 or nb_of_dices > 100:
-        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + ".")
+        if not(operation):
+            await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + ".")
+        else:
+            total = sum(results) + add_value
+            to_say = "{0.author.mention} vous avez obtenu un ".format(msg) +\
+            "** {0} ** ({1} {2} {3}).".format(total, sum(results), operation.group(2), abs(add_value), )
+            await msg.channel.send(to_say)
     else:
         inter = "(" + str(results[0])
         for value in results[1:]:
             inter = inter + " + " + str(value)
+        if operation:
+            inter += " {0} ".format(operation.group(2)) + str(abs(add_value))
         inter = inter + ")"
-        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)) + "**" + " " + inter + ".")
+        await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(sum(results)+add_value) + "**" + " " + inter + ".")
 
 @bot.command(pass_context = True,
 description = "This command allows the user to roll one or several dice, using the syntax:\n"
@@ -282,7 +299,7 @@ async def check(ctx):
             #it is limited to 100 checks
         message = await msg.channel.send("{0.author.mention}, c'est noté ! Le premier ok-check aura lieu dans {1}m".format(msg,interval))
         await asyncio.sleep(interval*60)
-        for i in range(nb_check):
+        for i in range(nb_check-1):
             if key not in check_dict:
                 break
             message = await msg.channel.send(":ok_hand: :grey_question:")
