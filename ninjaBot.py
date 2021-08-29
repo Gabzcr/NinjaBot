@@ -115,6 +115,48 @@ async def leave(ctx):
 
 
 ################################################################################
+# Channel access management #
+################################################################################
+
+radio_is_on = False
+radio_timelapse = 8*60+34
+
+@bot.command(pass_context = True)
+async def radio_on(ctx):
+    global radio_is_on
+    radio_is_on = True
+    msg = ctx.message
+    chan_name = normalize_name(msg.content[10:])
+    target_channel = discord.utils.find(lambda c: normalize_name(c.name) == chan_name, msg.guild.voice_channels)
+    await msg.channel.send("{0.author.mention}, c'est noté ! ".format(msg)+\
+    "Le salon vocal {0.name} est désormais en communication alternée.".format(target_channel))
+    speak_permission = True
+    while radio_is_on:
+        people = target_channel.members
+        for player in people:
+            overwrite = target_channel.overwrites_for(player)
+            overwrite.speak = speak_permission
+            await target_channel.set_permissions(player, overwrite=overwrite)
+            await player.move_to(target_channel)
+        speak_permission = not(speak_permission)
+        await asyncio.sleep(radio_timelapse)
+
+@bot.command(pass_context = True)
+async def radio_off(ctx):
+    global radio_is_on
+    radio_is_on = False
+    await ctx.message.channel.send("{0.author.mention}, c'est noté ! ".format(ctx.message)+\
+    "J'arrête de travailler.")
+
+@bot.command(pass_context = True)
+async def change_time(ctx):
+    global radio_timelapse
+    radio_timelapse = int(ctx.message.content[12:])
+    await ctx.message.channel.send("{0.author.mention}, c'est noté ! ".format(ctx.message)+\
+    "L'intervalle de parole a été changé à {0} secondes.".format(radio_timelapse))
+
+
+################################################################################
 # Dice roll and easter eggs #
 ################################################################################
 
