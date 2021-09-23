@@ -473,7 +473,7 @@ async def loop_function():
         t = datetime.datetime.now()
         if t.month == 12 and t.day == 31 and t.hour == 23 and t.minute == 0:
             guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
-            channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla-1", guild.channels)
+            channel = discord.utils.find(lambda c: normalize_name(c.name) == "blabla", guild.channels)
             role = guild.default_role
             role.mentionable = True
             msg = "🐥 @everyone Bonne année ! 🐥"
