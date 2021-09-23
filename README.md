@@ -52,7 +52,7 @@ B- La réponse B.
 
 NinjaBot s'occupe alors de mettre les réactions appropriées afin que les sondés n'aient pas à chercher eux-même dans la liste des émojis celui qui correspond à leur opinion.
 
-**-Commande check :** permet de lancer à intervalles réguliers des contrôles de sécurité émotionelle automatisés. Le bot demande l'état émotionnel des joueurs (":ok_hand: :grey_question: ") et prépare les trois émoji réponse en réaction (:thumbsup: :pinching_hand: :thumbsdown: ). En cas de réponse moyenne ou négative, ou d'absence de réponse s'il un rôle à surveiller est spécifié, le bot le notifie au MJ en MP.
+**-Commande check :** permet de lancer à intervalles réguliers des contrôles de sécurité émotionelle automatisés. Le bot demande l'état émotionnel des joueurs (":ok_hand: :grey_question: ") et prépare les trois émoji réponse en réaction (:thumbsup: :pinching_hand: :thumbsdown: ). En cas de réponse moyenne ou négative, ou d'absence de réponse si un rôle à surveiller est spécifié, le bot le notifie au MJ en MP.
 ```
 !check [intervalle entre 2 checks en minutes]m ([durée totale en heures]h) (@rôle_à_surveiller)
 ```
@@ -63,5 +63,7 @@ Pour arrêter les contrôles automatiques, utilisez la commande `!stop` (sans ar
 
 **- Divers :** 
  --> NinjaBot efface tous les emojis Ninja au bout de 5 à 15 secondes, effaçant au passage les messages qui le contiennent.
+ 
 --> NinjaBot réagit par :hatched_chick: à un message de la forme `Bonjour Mada[a+]me`
+
 --> NinjaBot répond avec une emoji Ninja quand il est tagué (y compris par un `@everyone`)
