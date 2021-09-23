@@ -24,15 +24,18 @@ Le bot efface tous les messages contenant une commande `join` ou une réponse à
 Cette commande fonctionne de la même façon que la commande join.
 Note : les permissions redeviennent celles du salon par défaut pour l'utilisateur.
 
-**- Commande roll :** permet de lancer un ou plusieurs dés.
+**- Commande roll :** permet de lancer un ou plusieurs dés, et d'effectuer des opérations basiques sur les résultats.
 ```
-![r ou roll] [nb de dés (par défaut : 1)][d ou D][valeur des dés]
+![r ou roll] (max/min) ([nb de dés (par défaut : 1)])[d ou D][valeur des dés](+ ou - valeur à ajouter/soustraire)
 ```
-Exemple: `!roll d6` ou `!r 2d20`.
 
-La légende raconte que cette commande serait truffée d'easter eggs...
+Exemple: `!roll d6`,  `!r max 2d20`, `!r d12 + 4` ou encore `!roll 3d10 - 2 min`
+Note : la valeur à ajouter/soustraire est appliquée à tous les dés en cas de lancers multiples.
 
-**- Commande poll (ou sondage):** permet de créer un sondage d'opinion par réactions à un message de sondage.
+La légende raconte que cette commande serait truffée d'easter eggs... 
+
+
+**- Commande poll (ou sondage):** permet de créer un sondage par emojis réactions, en plaçant automatiquement les emojis concernés par le sondage en réaction au message.
 ```
 ![poll ou sondage] [message contenant les emojis à reporter en réaction]
 (ou sur des lignes séparées après la commande:)
@@ -47,6 +50,18 @@ B- La réponse B.
 :emoji_quelconque: La réponse emoji
 ```
 
-NinjaBot s'occupe alors de préremplir le message avec les réactions appropriées afin que les sondés n'aient pas à chercher eux-même dans la liste des émojis celui qui correspond à leur opinion.
+NinjaBot s'occupe alors de mettre les réactions appropriées afin que les sondés n'aient pas à chercher eux-même dans la liste des émojis celui qui correspond à leur opinion.
+
+**-Commande check :** permet de lancer à intervalles réguliers des contrôles de sécurité émotionelle automatisés. Le bot demande l'état émotionnel des joueurs (":ok_hand: :grey_question: ") et prépare les trois émoji réponse en réaction (:thumbsup: :pinching_hand: :thumbsdown: ). En cas de réponse moyenne ou négative, ou d'absence de réponse s'il un rôle à surveiller est spécifié, le bot le notifie au MJ en MP.
+```
+!check [intervalle entre 2 checks en minutes]m ([durée totale en heures]h) (@rôle_à_surveiller)
+```
+Exemple : `!check @Bot 25m 1h` ou `!check 5m`.
+Pour arrêter les contrôles automatiques, utilisez la commande `!stop` (sans argument).
 
 **- Commande help :** cette doc en moins bien faite (et en Anglais).
+
+**- Divers :** 
+ --> NinjaBot efface tous les emojis Ninja au bout de 5 à 15 secondes, effaçant au passage les messages qui le contiennent.
+--> NinjaBot réagit par :hatched_chick: à un message de la forme `Bonjour Mada[a+]me`
+--> NinjaBot répond avec une emoji Ninja quand il est tagué (y compris par un `@everyone`)
