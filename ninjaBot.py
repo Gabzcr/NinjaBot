@@ -8,19 +8,16 @@ import datetime
 from easter_eggs import *
 
 from discord.ext import commands
-bot = commands.Bot(command_prefix='!', description="Ninjabot, at your service.\n"
-+ "I can give you access to the channel of your choice. (join)\n"
-+ "But I don't like those sneaky Ninjas, so I don't let them alive more than 5s or 10s on this server.\n"
-+ "I can roll dice for you. Just ask ! (roll)\n"
-+ "I can also prepare a poll message for you by reacting with appropriate emojis so that no one has to find them in the list. (poll)")
+bot = commands.Bot(command_prefix='!', description="Hi, I'm Ninjabot\n"
++ "I manage permissions to private channels, giving access to them on demand (commands join and leave)\n"
++ "I can roll dice and make basic operations on them (command roll)\n"
++ "I can help with your polls\n")
+
 
 @bot.event
 async def on_ready():
     print('Logged in as')
     print(bot.user.name)
-
-check_dict = {} #global variable for managing emotional security checks
-
 
 ################################################################################
 # Channel access management #
@@ -77,7 +74,7 @@ async def join_g(msg):
 
 @bot.command(pass_context=True)
 async def join(ctx):
-    """ Gives permission to access asked channel. """
+    """ Gives permission to access requested channel. """
     await join_g(ctx.message)
 
 
@@ -85,7 +82,7 @@ async def leave_g(msg):
     """
     General function for leave commands.
     For each line of the message msg corresponding to a leave command (!leave [channel_name]),
-    the bot looks for the corresponding channel and suppress all permission overwrites for the user who sent this message.
+    the bot looks for the corresponding channel and suppresses all permission overwrites for the user who sent this message.
     The bot answers to the user when finished, with the result of the command.
     """
     queries = msg.content.split("\n")
@@ -110,12 +107,12 @@ async def leave_g(msg):
 
 @bot.command(pass_context=True)
 async def leave(ctx):
-    """Suppress permission overwrites for asked channel (cancels a join command)."""
+    """Suppress permission overwrites for requested channel (cancels a join command)."""
     await leave_g(ctx.message)
 
 
 ################################################################################
-# Channel access management #
+# Radio feature for a particular GN #
 ################################################################################
 
 radio_is_on = False
@@ -123,6 +120,8 @@ radio_timelapse = 8*60+34
 
 @bot.command(pass_context = True)
 async def radio_on(ctx):
+    """Turns a channel into a GN "radio" : half of the time, all members can speak through it, the other half they are muted.
+    Permissions alternate in regular intervals given by radio_timelapse, default 8min34."""
     global radio_is_on
     radio_is_on = True
     msg = ctx.message
@@ -143,6 +142,7 @@ async def radio_on(ctx):
 
 @bot.command(pass_context = True)
 async def radio_off(ctx):
+    """Stops alternating permissions on current GN "radio" channel."""
     global radio_is_on
     radio_is_on = False
     await ctx.message.channel.send("{0.author.mention}, c'est noté ! ".format(ctx.message)+\
@@ -150,10 +150,11 @@ async def radio_off(ctx):
 
 @bot.command(pass_context = True)
 async def change_time(ctx):
+    """Modifies the duration of intervals between permission changes for a "radio" channel."""
     global radio_timelapse
     radio_timelapse = int(ctx.message.content[12:])
     await ctx.message.channel.send("{0.author.mention}, c'est noté ! ".format(ctx.message)+\
-    "L'intervalle de parole a été changé à {0} secondes.".format(radio_timelapse))
+    "L'intervalle de communication a été changé à {0} secondes.".format(radio_timelapse))
 
 
 ################################################################################
@@ -234,18 +235,6 @@ async def roll_g(msg, l):
             "** {0} ** ({1} {2} {3}).".format(total, sum(results), operation.group(2), abs(add_value), )
             await msg.channel.send(to_say)
     else:
-        """
-        if select_dice:
-            inter = "(" + str(results[0])
-            for value in results[1:]:
-                inter = inter + ", " + str(value)
-            inter = inter + ")"
-            if select_dice.group(2) == "min":
-                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(min(results)) + "** " + inter + ".")
-            else:#=="max"
-                await msg.channel.send("{0.author.mention} vous avez obtenu un ".format(msg) + "**" + str(max(results)) + "** " + inter + ".")
-
-        else:"""
         concat = " , " if select_dice else " + "
         inter = "(" + str(results[0])
         for value in results[1:]:
@@ -263,7 +252,7 @@ async def roll_g(msg, l):
 
 @bot.command(pass_context = True,
 description = "This command allows the user to roll one or several dice, using the syntax:\n"
-+ "!roll [number of dice][d|D][max value of the dice]")
++ "!roll [number of dice][d|D][max value of the dice] (+/- value to add)")
 async def roll(ctx):
     """ Draws one or more random numbers from 1 to a specified value. """
     await roll_g(ctx.message, 4)
@@ -335,6 +324,8 @@ async def sondage(ctx):
 # Emotional security checking #
 ################################################################################
 
+check_dict = {} #global variable for managing emotional security checks
+
 @bot.command(pass_context=True)
 async def check(ctx):
     """ Regularly checks on player emotional state and gives a feedback to the GM """
@@ -395,6 +386,7 @@ async def check(ctx):
 
 @bot.command(pass_context=True)
 async def stop(ctx):
+    """Cancels emotional checks to come in this channel."""
     global check_dict
     msg = ctx.message
     guild = msg.guild
@@ -402,8 +394,132 @@ async def stop(ctx):
     key = guild.id, chan.id
     if key in check_dict:
         del check_dict[key]
+        await msg.channel.send("{0.author.mention}, je mets fin aux contrôles ici.".format(msg))
 
 
+################################################################################
+# Pad Change Tracking #
+################################################################################
+
+import requests
+import imgkit
+import difflib
+import io
+from contextlib import redirect_stdout
+
+class NullIO(io.StringIO):
+    def write(self, txt):
+        pass
+
+def silent(f):
+    """Decorator to silence functions. To keep an empty console for Heroku."""
+    def silent_f(*args, **kwargs):
+        with redirect_stdout(NullIO()):
+            return f(*args, **kwargs)
+    return silent_f
+
+
+tracking_dict = {}
+#for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
+@bot.command(pass_context=True)
+async def track(ctx, arg):
+    """Tracks changes in given pad, and upload image of diffs when detected.
+    Usage : !track url_to_pad """
+    global tracking_dict
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    key = guild.id, chan.id
+    url = arg
+    if url[-1] == "/":
+        url = url[:-1]
+    doublon = False
+
+    if key in tracking_dict:
+        if url in tracking_dict[key]:
+            await msg.channel.send("{0.author.mention}, ".format(msg, url) +\
+            "je tracke déjà le pad à l'url {}".format(url))
+            doublon = True
+        else:
+            tracking_dict[key].append(url)
+    else:
+        tracking_dict[key] = [url]
+    old_pad = None
+
+    while not(doublon) and key in tracking_dict and url in tracking_dict[key]:
+        try:
+            rq = requests.get(url + "/export/txt")
+        except:
+            await msg.channel.send("{0.author.mention}, ceci n'est pas un url valide.".format(msg, url))
+            await end_track_aux(url, key, msg)
+            break
+
+        #Errors and forbidden demands (we want only track a PAD)
+        if rq.status_code != 200:
+            await msg.channel.send("{0.author.mention}, ".format(msg) +\
+            "je ne peux pas accéder à {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
+            "J'arrête de tracker cet url.")
+            await end_track_aux(url, key, msg)
+            break
+        if rq.text.startswith("<!DOCTYPE html>"):
+            await msg.channel.send("{0.author.mention}, ".format(msg) +\
+            "La requête /export/txt de cet url renvoie vers une page html au lieu d'une chaîne de caractères.\n" + \
+            "Est ce bien l'url d'un pad ? Son /export/txt se comporte-t-il comme attendu ?")
+            await end_track_aux(url, key, msg)
+            break
+
+        #first iteration, different from the others !
+        if not(old_pad):
+            old_pad = rq.text
+            await msg.channel.send("{0.author.mention}, c'est noté !\n".format(msg, url) +\
+            "A partir de maintenant, j'indiquerai ici les changements détectés sur le pad à l'url {}".format(url))
+        #finally, pad versions comparison !
+        else:
+            new_pad = rq.text
+            if old_pad != new_pad:
+                #computes the diff between pads and builds string of a html file containing a readable table of diffs
+                d = difflib.HtmlDiff(tabsize=4, wrapcolumn=80)
+                differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
+
+                fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
+                img = silent(imgkit.from_file)(fileObj, False) #turns html file into an image
+                await msg.channel.send("Changement détecté sur le pad à l'url {} :".format(url))
+                await msg.channel.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
+                old_pad = new_pad
+        await asyncio.sleep(10)
+
+async def end_track_aux(url, key, msg):
+    """Remove url from the tracking dictionnary"""
+    global tracking_dict
+    if key in tracking_dict:
+        if len(tracking_dict[key]) == 1 and url in tracking_dict[key]:
+            del tracking_dict[key]
+            return 0
+        elif len(tracking_dict[key]) > 1 and url in tracking_dict[key]:
+            tracking_dict[key].remove(url)
+            return 0
+        else:
+            return 1
+    return 1
+
+
+@bot.command(pass_context=True)
+async def end_track(ctx, arg):
+    """Puts an end to the tracking of changes in given pad.
+    Usage : !end_track url_to_pad"""
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    key = guild.id, chan.id
+    url = arg
+    if url[-1] == "/":
+        url = url[:-1]
+    result = await end_track_aux(url, key, msg)
+    if result == 0:
+        await msg.channel.send("{0.author.mention}, j'arrête de tracker le pad à l'url {1}".format(msg, url))
+    else :
+        await msg.channel.send("{0.author.mention}, ".format(msg) +\
+        "je ne trackais pas le pad à cette url : {0}".format(url))
 
 ################################################################################
 # Divers #
@@ -483,5 +599,4 @@ async def loop_function():
             await asyncio.sleep(5)
 
 bot.loop.create_task(loop_function())
-
 bot.run(os.getenv('BOT_TOKEN'))
