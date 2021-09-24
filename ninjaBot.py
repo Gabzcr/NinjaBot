@@ -482,7 +482,8 @@ async def track(ctx, arg):
                 differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
 
                 fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
-                img = silent(imgkit.from_file)(fileObj, False) #turns html file into an image
+                config = pdfkit.configuration(wkhtmltopdf='./bin/wkhtmltopdf', wkhtmltoimage='./bin/wkhtmltoimage')
+                img = silent(imgkit.from_file)(fileObj, False, config=config) #turns html file into an image
                 await msg.channel.send("Changement détecté sur le pad à l'url {} :".format(url))
                 await msg.channel.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
                 old_pad = new_pad
