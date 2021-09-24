@@ -1,5 +1,5 @@
 discord.py==1.3.4
 requests
 imgkit
-wkhtmltopdf-pack==0.12.3.0 
+wkhtmltopdf-pack
 pdfkit==0.6.0
