@@ -487,7 +487,7 @@ async def track(ctx, arg):
                 await msg.channel.send("Changement détecté sur le pad à l'url {} :".format(url))
                 await msg.channel.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
                 old_pad = new_pad
-        await asyncio.sleep(10)
+        await asyncio.sleep(60*5)
 
 async def end_track_aux(url, key, msg):
     """Remove url from the tracking dictionnary"""
