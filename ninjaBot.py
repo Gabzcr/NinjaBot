@@ -464,6 +464,7 @@ import imgkit
 import difflib
 import io
 from contextlib import redirect_stdout
+import redis
 from redis_dict import RedisDict
 r = redis.from_url(os.environ.get("REDIS_URL"))
 
