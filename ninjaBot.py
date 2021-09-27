@@ -324,7 +324,7 @@ async def sondage(ctx):
 # Emotional security checking #
 ################################################################################
 
-check_dict = {} #global variable for managing emotional security checks
+check_dict = {}
 
 @bot.command(pass_context=True)
 async def check(ctx):
@@ -398,131 +398,6 @@ async def stop(ctx):
 
 
 ################################################################################
-# Pad Change Tracking #
-################################################################################
-
-import requests
-import imgkit
-import difflib
-import io
-from contextlib import redirect_stdout
-
-class NullIO(io.StringIO):
-    def write(self, txt):
-        pass
-
-def silent(f):
-    """Decorator to silence functions. To keep an empty console for Heroku."""
-    def silent_f(*args, **kwargs):
-        with redirect_stdout(NullIO()):
-            return f(*args, **kwargs)
-    return silent_f
-
-
-tracking_dict = {}
-#for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
-@bot.command(pass_context=True)
-async def track(ctx, arg):
-    """Tracks changes in given pad, and upload image of diffs when detected.
-    Usage : !track url_to_pad """
-    global tracking_dict
-    msg = ctx.message
-    guild = msg.guild
-    chan = msg.channel
-    key = guild.id, chan.id
-    url = arg
-    if url[-1] == "/":
-        url = url[:-1]
-    doublon = False
-
-    if key in tracking_dict:
-        if url in tracking_dict[key]:
-            await msg.channel.send("{0.author.mention}, ".format(msg, url) +\
-            "je tracke déjà le pad à l'url {}".format(url))
-            doublon = True
-        else:
-            tracking_dict[key].append(url)
-    else:
-        tracking_dict[key] = [url]
-    old_pad = None
-
-    while not(doublon) and key in tracking_dict and url in tracking_dict[key]:
-        try:
-            rq = requests.get(url + "/export/txt")
-        except:
-            await msg.channel.send("{0.author.mention}, ceci n'est pas un url valide.".format(msg, url))
-            await end_track_aux(url, key, msg)
-            break
-
-        #Errors and forbidden demands (we want only track a PAD)
-        if rq.status_code != 200:
-            await msg.channel.send("{0.author.mention}, ".format(msg) +\
-            "je ne peux pas accéder à {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
-            "J'arrête de tracker cet url.")
-            await end_track_aux(url, key, msg)
-            break
-        if rq.text.startswith("<!DOCTYPE html>"):
-            await msg.channel.send("{0.author.mention}, ".format(msg) +\
-            "La requête /export/txt de cet url renvoie vers une page html au lieu d'une chaîne de caractères.\n" + \
-            "Est ce bien l'url d'un pad ? Son /export/txt se comporte-t-il comme attendu ?")
-            await end_track_aux(url, key, msg)
-            break
-
-        #first iteration, different from the others !
-        if not(old_pad):
-            old_pad = rq.text
-            await msg.channel.send("{0.author.mention}, c'est noté !\n".format(msg, url) +\
-            "A partir de maintenant, j'indiquerai ici les changements détectés sur le pad à l'url {}".format(url))
-        #finally, pad versions comparison !
-        else:
-            new_pad = rq.text
-            if old_pad != new_pad:
-                #computes the diff between pads and builds string of a html file containing a readable table of diffs
-                d = difflib.HtmlDiff(tabsize=4, wrapcolumn=80)
-                differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
-
-                fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
-                config = imgkit.config(wkhtmltoimage='./bin/wkhtmltoimage')
-                img = silent(imgkit.from_file)(fileObj, False, config=config) #turns html file into an image
-                await msg.channel.send("Changement détecté sur le pad à l'url {} :".format(url))
-                await msg.channel.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
-                old_pad = new_pad
-        await asyncio.sleep(60*5)
-
-async def end_track_aux(url, key, msg):
-    """Remove url from the tracking dictionnary"""
-    global tracking_dict
-    if key in tracking_dict:
-        if len(tracking_dict[key]) == 1 and url in tracking_dict[key]:
-            del tracking_dict[key]
-            return 0
-        elif len(tracking_dict[key]) > 1 and url in tracking_dict[key]:
-            tracking_dict[key].remove(url)
-            return 0
-        else:
-            return 1
-    return 1
-
-
-@bot.command(pass_context=True)
-async def end_track(ctx, arg):
-    """Puts an end to the tracking of changes in given pad.
-    Usage : !end_track url_to_pad"""
-    msg = ctx.message
-    guild = msg.guild
-    chan = msg.channel
-    key = guild.id, chan.id
-    url = arg
-    if url[-1] == "/":
-        url = url[:-1]
-    result = await end_track_aux(url, key, msg)
-    if result == 0:
-        await msg.channel.send("{0.author.mention}, j'arrête de tracker le pad à l'url {1}".format(msg, url))
-    else :
-        await msg.channel.send("{0.author.mention}, ".format(msg) +\
-        "je ne trackais pas le pad à cette url : {0}".format(url))
-
-################################################################################
 # Divers #
 ################################################################################
 
@@ -581,12 +456,97 @@ async def on_reaction_add(reaction, user):
 
 
 ################################################################################
+# Pad Change Tracking #
+################################################################################
+
+import requests
+import imgkit
+import difflib
+import io
+from contextlib import redirect_stdout
+
+class NullIO(io.StringIO):
+    def write(self, txt):
+        pass
+
+def silent(f):
+    """Decorator to silence functions. To keep an empty console for Heroku."""
+    def silent_f(*args, **kwargs):
+        with redirect_stdout(NullIO()):
+            return f(*args, **kwargs)
+    return silent_f
+
+
+from redis_dict import RedisDict
+tracking_dict = RedisDict(namespace='bar') #global variable for managing emotional security checks
+#for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
+@bot.command(pass_context=True)
+async def track(ctx, arg):
+    """Tracks changes in given pad, and upload image of diffs when detected.
+    Usage : !track url_to_pad """
+    global tracking_dict
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    url = arg
+    if url[-1] == "/":
+        url = url[:-1]
+    key = str(chan.id) + "+" + url
+
+    if key in tracking_dict:
+        await msg.channel.send("{0.author.mention}, ".format(msg, url) +\
+        "je tracke déjà ici le pad à l'url {}".format(url))
+    else:
+        try:
+            rq = requests.get(url + "/export/txt")
+        except:
+            await msg.channel.send("{0.author.mention}, ceci n'est pas un url valide.".format(msg, url))
+        else:
+            #Errors and forbidden demands (we want only track a PAD)
+            if rq.status_code != 200:
+                await msg.channel.send("{0.author.mention}, ".format(msg) +\
+                "je ne peux pas accéder à {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason))
+            elif rq.text.startswith("<!DOCTYPE html>"):
+                await msg.channel.send("{0.author.mention}, ".format(msg) +\
+                "La requête /export/txt de cet url renvoie vers une page html au lieu d'une chaîne de caractères.\n" + \
+                "Est ce bien l'url d'un pad ? Son /export/txt se comporte-t-il comme attendu ?")
+            else:
+                tracking_dict[key] = rq.text
+                await msg.channel.send("{0.author.mention}, c'est noté !\n".format(msg, url) +\
+                "A partir de maintenant, j'indiquerai ici les changements détectés sur le pad à l'url {}".format(url))
+
+async def end_track_aux(key, chan):
+    global tracking_dict
+    if key in tracking_dict:
+        del tracking_dict[key]
+        await chan.send("{0.author.mention}, j'arrête de tracker le pad à l'url {1}".format(msg, url))
+    else:
+        await chan.send("{0.author.mention}, ".format(msg) +\
+        "je ne trackais pas ici le pad à l'url {0}".format(url))
+
+@bot.command(pass_context=True)
+async def end_track(ctx, arg):
+    """Puts an end to the tracking of changes in given pad.
+    Usage : !end_track url_to_pad"""
+    msg = ctx.message
+    guild = msg.guild
+    chan = msg.channel
+    url = arg
+    if url[-1] == "/":
+        url = url[:-1]
+    key = str(chan.id) + "+" + url
+    await end_track_aux(key, chan)
+
+################################################################################
 # Bot loop function (and happy new year feature) #
 ################################################################################
 
 async def loop_function():
+    global tracking_dict
     await bot.wait_until_ready()
     while not bot.is_closed():
+
+        #new year wishing
         t = datetime.datetime.now()
         if t.month == 12 and t.day == 31 and t.hour == 23 and t.minute == 0:
             guild = discord.utils.find(lambda c: normalize_name(c.name) == "club-murder", bot.guilds)
@@ -595,9 +555,36 @@ async def loop_function():
             role.mentionable = True
             msg = "🐥 @everyone Bonne année ! 🐥"
             await channel.send(msg)
-            await asyncio.sleep(61)
-        else:
-            await asyncio.sleep(5)
+            await asyncio.sleep(61) #avoid wishing the new year twice
+
+        #pad tracking
+        for key in tracking_dict:
+            infos = key.split("+")
+            chan = bot.get_channel(int(infos[0]))
+            url = infos[1]
+            rq = requests.get(url + "/export/txt")
+            #Errors and forbidden demands (we want only track a PAD)
+            if rq.status_code != 200:
+                await chan.send("Je ne peux plus accéder au pad à l'url {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
+                "J'arrête de tracker cet url.")
+                await end_track_aux(key, chan)
+            else:
+                new_pad = rq.text
+                old_pad = tracking_dict[key]
+                if old_pad != new_pad:
+                    #computes the diff between pads and builds string of a html file containing a readable table of diffs
+                    d = difflib.HtmlDiff(tabsize=4, wrapcolumn=80)
+                    differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
+
+                    fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
+                    config = imgkit.config(wkhtmltoimage='./bin/wkhtmltoimage')
+                    img = silent(imgkit.from_file)(fileObj, False, config=config) #turns html file into an image
+                    await chan.send("Changement détecté sur le pad à l'url {} :".format(url))
+                    await chan.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
+                    tracking_dict[key] = new_pad
+
+        await asyncio.sleep(10)
 
 bot.loop.create_task(loop_function())
+
 bot.run(os.getenv('BOT_TOKEN'))
