@@ -464,6 +464,8 @@ import imgkit
 import difflib
 import io
 from contextlib import redirect_stdout
+from redis_dict import RedisDict
+r = redis.from_url(os.environ.get("REDIS_URL"))
 
 class NullIO(io.StringIO):
     def write(self, txt):
@@ -477,7 +479,7 @@ def silent(f):
     return silent_f
 
 
-from redis_dict import RedisDict
+
 tracking_dict = RedisDict(namespace='bar') #global variable for managing emotional security checks
 #for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
 @bot.command(pass_context=True)
