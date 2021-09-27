@@ -481,7 +481,7 @@ def silent(f):
 
 
 
-tracking_dict = RedisDict(namespace='bar') #global variable for managing emotional security checks
+tracking_dict = RedisDict() #global variable for managing emotional security checks
 #for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
 @bot.command(pass_context=True)
 async def track(ctx, arg):
