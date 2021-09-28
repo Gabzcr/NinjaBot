@@ -467,9 +467,7 @@ from contextlib import redirect_stdout
 import redis
 from redis_dict import RedisDict
 from urllib.parse import urlparse
-#r = redis.from_url(os.environ.get("REDIS_URL"))
 url = urlparse(os.environ.get("REDIS_TLS_URL"))
-#r = redis.Redis(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None)
 
 
 class NullIO(io.StringIO):
@@ -500,7 +498,6 @@ async def track(ctx, arg):
     if url[-1] == "/":
         url = url[:-1]
     key = str(chan.id) + "+" + url
-    print("key =", key)
 
     if key in tracking_dict:
         await msg.channel.send("{0.author.mention}, ".format(msg, url) +\
