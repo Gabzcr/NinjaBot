@@ -468,7 +468,7 @@ import redis
 from redis_dict import RedisDict
 from urllib.parse import urlparse
 #r = redis.from_url(os.environ.get("REDIS_URL"))
-url = urlparse(os.environ.get("REDIS_URL"))
+url = urlparse(os.environ.get("REDIS_TLS_URL"))
 #r = redis.Redis(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None)
 
 
@@ -485,9 +485,9 @@ def silent(f):
 
 
 
-#tracking_dict = RedisDict(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None) #global variable for managing emotional security checks
+tracking_dict = RedisDict(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None) #global variable for managing emotional security checks
 #for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
-tracking_dict = {"891089232146341889+http://avalon.ens-lyon.fr:9001/p/r.0a5570e58693267b8b602f41191e9b55":""}
+#tracking_dict = {"891089232146341889+http://avalon.ens-lyon.fr:9001/p/r.0a5570e58693267b8b602f41191e9b55":""}
 @bot.command(pass_context=True)
 async def track(ctx, arg):
     """Tracks changes in given pad, and upload image of diffs when detected.
