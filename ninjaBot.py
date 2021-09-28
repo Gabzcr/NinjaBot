@@ -526,12 +526,13 @@ async def track(ctx, arg):
 
 async def end_track_aux(key, chan):
     global tracking_dict
+    infos = key.split('+')
+    url = infos[1]
     if key in tracking_dict:
         del tracking_dict[key]
-        await chan.send("{0.author.mention}, j'arrête de tracker le pad à l'url {1}".format(msg, url))
+        await chan.send("J'arrête de tracker le pad à l'url {0}".format(url))
     else:
-        await chan.send("{0.author.mention}, ".format(msg) +\
-        "je ne trackais pas ici le pad à l'url {0}".format(url))
+        await chan.send("Je ne trackais pas ici le pad à l'url {0}".format(url))
 
 @bot.command(pass_context=True)
 async def end_track(ctx, arg):
