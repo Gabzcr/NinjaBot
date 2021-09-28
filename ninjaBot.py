@@ -485,8 +485,9 @@ def silent(f):
 
 
 
-tracking_dict = RedisDict(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None) #global variable for managing emotional security checks
+#tracking_dict = RedisDict(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None) #global variable for managing emotional security checks
 #for tests : https://pads.aliens-lyon.fr/p/XVnOAJ0LZMtTudweskBZ
+tracking_dict = {}
 @bot.command(pass_context=True)
 async def track(ctx, arg):
     """Tracks changes in given pad, and upload image of diffs when detected.
@@ -499,6 +500,7 @@ async def track(ctx, arg):
     if url[-1] == "/":
         url = url[:-1]
     key = str(chan.id) + "+" + url
+    print("key =", key)
 
     if key in tracking_dict:
         await msg.channel.send("{0.author.mention}, ".format(msg, url) +\
