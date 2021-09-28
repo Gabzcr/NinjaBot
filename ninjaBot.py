@@ -469,7 +469,7 @@ from redis_dict import RedisDict
 from urllib.parse import urlparse
 #r = redis.from_url(os.environ.get("REDIS_URL"))
 url = urlparse(os.environ.get("REDIS_URL"))
-r = redis.Redis(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None)
+#r = redis.Redis(host=url.hostname, port=url.port, username=url.username, password=url.password, ssl=True, ssl_cert_reqs=None)
 
 
 class NullIO(io.StringIO):
