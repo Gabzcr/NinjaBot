@@ -562,7 +562,7 @@ async def loop_function():
             role.mentionable = True
             msg = "🐥 @everyone Bonne année ! 🐥"
             await channel.send(msg)
-            await asyncio.sleep(61) #avoid wishing the new year twice
+            await asyncio.sleep(31) #avoid wishing the new year twice
 
         #pad tracking
         for key in tracking_dict:
@@ -589,8 +589,9 @@ async def loop_function():
                     await chan.send("Changement détecté sur le pad à l'url {} :".format(url))
                     await chan.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
                     tracking_dict[key] = new_pad
+                    await asyncio.sleep(5*60) #in case of detected change in the pad, avoid spamming changes all the time : wait 5 minutes
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(30)
 
 bot.loop.create_task(loop_function())
 
