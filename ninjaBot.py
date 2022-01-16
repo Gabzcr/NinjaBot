@@ -550,9 +550,11 @@ async def end_track(ctx, arg):
 
 async def loop_function():
     global tracking_dict
+    loop_interval = 5 #nb of seconds between each execution of the loop.
+    pad_check_interval = 10*60 #interval of time between 2 checks of the pad.
+    counter = 0 #every time this reaches interval of checks/interval of time between loops, bot checks the pad
     await bot.wait_until_ready()
     while not bot.is_closed():
-
         #new year wishing
         t = datetime.datetime.now()
         if t.month == 12 and t.day == 31 and t.hour == 23 and t.minute == 0:
@@ -562,36 +564,48 @@ async def loop_function():
             role.mentionable = True
             msg = "🐥 @everyone Bonne année ! 🐥"
             await channel.send(msg)
-            await asyncio.sleep(31) #avoid wishing the new year twice
+            await asyncio.sleep(61-loop_interval) #avoid wishing the new year twice
 
         #pad tracking
-        for key in tracking_dict:
-            infos = key.split("+")
-            chan = bot.get_channel(int(infos[0]))
-            url = infos[1]
-            rq = requests.get(url + "/export/txt")
-            #Errors and forbidden demands (we want only track a PAD)
-            if rq.status_code != 200:
-                await chan.send("Je ne peux plus accéder au pad à l'url {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
-                "J'arrête de tracker cet url.")
-                await end_track_aux(key, chan)
-            else:
-                new_pad = rq.text
-                old_pad = tracking_dict[key]
-                if old_pad != new_pad:
-                    #computes the diff between pads and builds string of a html file containing a readable table of diffs
-                    d = difflib.HtmlDiff(tabsize=4, wrapcolumn=80)
-                    differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
+        if counter < int(pad_check_interval/loop_interval):
+            counter += 1
+        elif counter == int(pad_check_interval/loop_interval):
+            counter = 0
+            for key in tracking_dict:
+                infos = key.split("+")
+                chan = bot.get_channel(int(infos[0]))
+                url = infos[1]
+                rq = requests.get(url + "/export/txt")
+                #Errors and forbidden demands (we want only track a PAD)
+                if rq.status_code != 200:
+                    await chan.send("Je ne peux plus accéder au pad à l'url {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
+                    "J'arrête de tracker cet url.")
+                    await end_track_aux(key, chan)
 
-                    fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
-                    config = imgkit.config(wkhtmltoimage='./bin/wkhtmltoimage')
-                    img = silent(imgkit.from_file)(fileObj, False, config=config) #turns html file into an image
-                    await chan.send("Changement détecté sur le pad à l'url {} :".format(url))
-                    await chan.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
-                    tracking_dict[key] = new_pad
-                    await asyncio.sleep(5*60) #in case of detected change in the pad, avoid spamming changes all the time : wait 5 minutes
+                #Pad comparison
+                else:
+                    new_pad = rq.text
+                    old_pad = tracking_dict[key]
+                    if old_pad != new_pad:
+                        await asyncio.sleep(5*60) #wait 5 minutes for user of pad to "finish" writing what he's doing.
+                        rq = requests.get(url + "/export/txt")
+                        if rq.status_code != 200:
+                            await chan.send("Je ne peux plus accéder au pad à l'url {}. Code {} ({}).\n".format(url, rq.status_code, rq.reason) +\
+                            "J'arrête de tracker cet url.")
+                            await end_track_aux(key, chan)
+                        new_pad = rq.text #new pad after 5 additional minutes
 
-        await asyncio.sleep(30)
+                        #computes the diff between pads and builds string of a html file containing a readable table of diffs
+                        d = difflib.HtmlDiff(tabsize=4, wrapcolumn=80)
+                        differences = d.make_file(old_pad.split("\n"), new_pad.split("\n"), context = True, numlines=2)
+
+                        fileObj = io.StringIO(differences) #turns differences (string of a HTML file) into a valid file object
+                        img = silent(imgkit.from_file)(fileObj, False) #turns html file into an image
+                        await chan.send("Changement détecté sur le pad à l'url {} :".format(url))
+                        await chan.send(file=discord.File(io.BytesIO(img), filename = "diff.png"))
+                        tracking_dict[key] = new_pad
+
+        await asyncio.sleep(loop_interval)
 
 bot.loop.create_task(loop_function())
 
