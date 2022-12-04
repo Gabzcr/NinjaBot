@@ -7,8 +7,12 @@ import unicodedata
 import datetime
 from easter_eggs import *
 
+
+intents = discord.Intents.default()
+intents.message_content = True
+
 from discord.ext import commands
-bot = commands.Bot(command_prefix='!', description="Hi, I'm Ninjabot\n"
+bot = commands.Bot(intents=intents, command_prefix='!', description="Hi, I'm Ninjabot\n"
 + "I manage permissions to private channels, giving access to them on demand (commands join and leave)\n"
 + "I can roll dice and make basic operations on them (command roll)\n"
 + "I can help with your polls\n")
@@ -547,7 +551,7 @@ async def end_track(ctx, arg):
 ################################################################################
 # Bot loop function (and happy new year feature) #
 ################################################################################
-
+"""
 async def loop_function():
     global tracking_dict
     loop_interval = 5 #nb of seconds between each execution of the loop.
@@ -608,5 +612,6 @@ async def loop_function():
         await asyncio.sleep(loop_interval)
 
 bot.loop.create_task(loop_function())
+"""
 
 bot.run(os.getenv('BOT_TOKEN'))
